@@ -1,6 +1,15 @@
 
 ## 编译说明
 
+
+#### mac - 
+`````
+
+mkdir build; cd build
+cmake .. -DBUILD_EXAMPLES=ON -DBUILD_TESTS=ON -DOPENSSL_ROOT_DIR="/usr/local/opt/openssl"
+
+`````
+
 #### windows - vs 2017
 `````
 

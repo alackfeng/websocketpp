@@ -92,13 +92,13 @@ macro (final_target)
 endmacro ()
 
 macro (link_boost)
-    if(MSVC)
-        include_directories (${OPENSSL_INCLUDE_DIR})
-    endif()
     target_link_libraries (${TARGET_NAME} ${Boost_LIBRARIES})
 endmacro ()
 
 macro (link_openssl)
+    # if(MSVC)
+        include_directories (${OPENSSL_INCLUDE_DIR})
+    # endif()
     target_link_libraries (${TARGET_NAME} ${OPENSSL_SSL_LIBRARY} ${OPENSSL_CRYPTO_LIBRARY})
 endmacro ()
 
