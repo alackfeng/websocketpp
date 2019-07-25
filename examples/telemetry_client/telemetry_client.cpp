@@ -5,6 +5,10 @@
 // select between boost::thread and std::thread based on how the build system
 // is configured.
 #include <websocketpp/common/thread.hpp>
+#ifdef WIN32
+#define sleep(a) Sleep(a*1000)
+#endif // WIN32
+
 
 /**
  * The telemetry client connects to a WebSocket server and sends a message every

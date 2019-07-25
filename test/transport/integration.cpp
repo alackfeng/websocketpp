@@ -27,6 +27,9 @@
 //#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE transport_integration
 #include <boost/test/unit_test.hpp>
+#ifdef WIN32
+#define sleep(a) Sleep(a*1000)
+#endif // WIN32
 
 #include <websocketpp/common/thread.hpp>
 

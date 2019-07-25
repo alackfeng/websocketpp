@@ -31,7 +31,9 @@
 #ifndef WEBSOCKETPP_LOGGER_SYSLOG_HPP
 #define WEBSOCKETPP_LOGGER_SYSLOG_HPP
 
+#ifndef WIN32
 #include <syslog.h>
+#endif
 
 #include <websocketpp/logger/basic.hpp>
 

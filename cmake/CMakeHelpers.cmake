@@ -20,6 +20,10 @@ macro (print_used_build_config)
     message (STATUS "OPENSSL_LIBRARIES = ${OPENSSL_LIBRARIES}")
     message (STATUS "OPENSSL_VERSION = ${OPENSSL_VERSION}")
     message ("") 
+    message (STATUS "ZLIB_FOUND        = ${ZLIB_FOUND}")
+    message (STATUS "ZLIB_INCLUDE_DIR     = ${ZLIB_INCLUDE_DIR}")
+    message (STATUS "ZLIB_LIBRARIES = ${ZLIB_LIBRARIES}")
+    message ("") 
 endmacro ()
 
 # Adds the given folder_name into the source files of the current project. 
@@ -88,6 +92,9 @@ macro (final_target)
 endmacro ()
 
 macro (link_boost)
+    if(MSVC)
+        include_directories (${OPENSSL_INCLUDE_DIR})
+    endif()
     target_link_libraries (${TARGET_NAME} ${Boost_LIBRARIES})
 endmacro ()
 
@@ -96,6 +103,9 @@ macro (link_openssl)
 endmacro ()
 
 macro (link_zlib)
+    if(MSVC)
+        include_directories (${ZLIB_INCLUDE_DIR})
+    endif()
 	target_link_libraries (${TARGET_NAME} ${ZLIB_LIBRARIES})
 endmacro ()
 
