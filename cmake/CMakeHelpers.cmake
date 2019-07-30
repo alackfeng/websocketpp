@@ -64,6 +64,24 @@ macro (build_executable TARGET_NAME)
     set_target_properties (${TARGET_NAME} PROPERTIES DEBUG_POSTFIX d)
 endmacro ()
 
+# Build library for librarys
+macro (build_library TARGET_NAME)
+    set (TARGET_LIB_TYPE "STATIC_LIBRARY")
+    message (STATUS "-- Build Type:")
+    message (STATUS "       " ${TARGET_LIB_TYPE})
+
+    add_library (${TARGET_NAME} STATIC ${ARGN})
+
+    include_directories (${WEBSOCKETPP_ROOT} ${WEBSOCKETPP_INCLUDE})
+
+    target_link_libraries(${TARGET_NAME} ${WEBSOCKETPP_PLATFORM_LIBS})
+
+    set_target_properties (${TARGET_NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${WEBSOCKETPP_LIB})
+    set_target_properties (${TARGET_NAME} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${WEBSOCKETPP_LIB})
+    set_target_properties (${TARGET_NAME} PROPERTIES DEBUG_POSTFIX d)
+endmacro ()
+
+
 # Build executable and register as test
 macro (build_test TARGET_NAME)
     build_executable (${TARGET_NAME} ${ARGN})

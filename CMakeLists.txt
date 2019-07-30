@@ -240,6 +240,7 @@ add_subdirectory (websocketpp)
 # Add examples
 if (BUILD_EXAMPLES)
     include_subdirs ("examples")
+    include_subdirs ("plugins")
 endif ()
 
 # Add tests
