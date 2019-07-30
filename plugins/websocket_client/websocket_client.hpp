@@ -11,22 +11,25 @@
 #include <websocketpp/config/asio_no_tls_client.hpp>
 #include <websocketpp/client.hpp>
 
+#include <plugins/base/plugin.hpp>
+using namespace sdk::plugins::base;
 
 namespace sdk {
 namespace plugins {
 
 using websocketpp::connection_hdl;
 
-
-
-class websocket_client
+class websocket_client: public plugin<websocket_client>
 {
 public:
   typedef websocketpp::client<websocketpp::config::asio_client> client;
   typedef websocketpp::lib::lock_guard<websocketpp::lib::mutex> scoped_lock;
 
   websocket_client();
-  ~websocket_client();
+  virtual ~websocket_client();
+  void plugin_initialize(const options* params);
+  void plugin_startup();
+  void plugin_shutdown();
 
   void run(const std::string& uri);
   void on_open(connection_hdl hdl);

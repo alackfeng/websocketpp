@@ -30,12 +30,13 @@ endmacro ()
 # Use this macro when your module contains .cpp and .h files in several subdirectories.
 # Your sources variable needs to be WSPP_SOURCE_FILES and headers variable WSPP_HEADER_FILES.
 macro(add_source_folder folder_name)
-    file(GLOB H_FILES_IN_FOLDER_${folder_name} ${folder_name}/*.hpp ${folder_name}/*.h)
-    file(GLOB CPP_FILES_IN_FOLDER_${folder_name} ${folder_name}/*.cpp ${folder_name}/*.c)
+    file(GLOB H_FILES_IN_FOLDER_${folder_name} ${WEBSOCKETPP_ROOT}/plugins/${folder_name}/*.hpp  ${WEBSOCKETPP_ROOT}/plugins/${folder_name}/*.h)
+    file(GLOB CPP_FILES_IN_FOLDER_${folder_name} ${WEBSOCKETPP_ROOT}/plugins/${folder_name}/*.cpp  ${WEBSOCKETPP_ROOT}/plugins/${folder_name}/*.c)
     source_group("Header Files\\${folder_name}" FILES ${H_FILES_IN_FOLDER_${folder_name}})
     source_group("Source Files\\${folder_name}" FILES ${CPP_FILES_IN_FOLDER_${folder_name}})
     set(WSPP_HEADER_FILES ${WSPP_HEADER_FILES} ${H_FILES_IN_FOLDER_${folder_name}})
     set(WSPP_SOURCE_FILES ${WSPP_SOURCE_FILES} ${CPP_FILES_IN_FOLDER_${folder_name}})
+#    message (STATUS "       message source: " ${WSPP_SOURCE_FILES})
 endmacro()
 
 # Initialize target.
@@ -53,10 +54,16 @@ macro (build_executable TARGET_NAME)
     set (TARGET_LIB_TYPE "EXECUTABLE")
     message (STATUS "-- Build Type:")
     message (STATUS "       " ${TARGET_LIB_TYPE})
+    
+#    file(GLOB PLUGINS_LIB_SOURCE ${WEBSOCKETPP_ROOT}/plugins/base/*.cpp)
+#    message (STATUS "       include hpp: " ${WSPP_HEADER_FILES})
+#    message (STATUS "       source  cpp: " ${WSPP_SOURCE_FILES})
 
-    add_executable (${TARGET_NAME} ${ARGN})
+    ### add build link source
+    add_source_folder(base)
+    add_executable (${TARGET_NAME} ${ARGN} ${WSPP_SOURCE_FILES} ${WSPP_SOURCE_FILES})
 
-    include_directories (${WEBSOCKETPP_ROOT} ${WEBSOCKETPP_INCLUDE})
+    include_directories (${WEBSOCKETPP_ROOT} ${WEBSOCKETPP_INCLUDE} ${WSPP_HEADER_FILES} )
 
     target_link_libraries(${TARGET_NAME} ${WEBSOCKETPP_PLATFORM_LIBS})
 
@@ -69,7 +76,6 @@ macro (build_library TARGET_NAME)
     set (TARGET_LIB_TYPE "STATIC_LIBRARY")
     message (STATUS "-- Build Type:")
     message (STATUS "       " ${TARGET_LIB_TYPE})
-
     add_library (${TARGET_NAME} STATIC ${ARGN})
 
     include_directories (${WEBSOCKETPP_ROOT} ${WEBSOCKETPP_INCLUDE})

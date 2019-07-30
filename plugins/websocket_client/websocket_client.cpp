@@ -1,6 +1,7 @@
 
 #include "websocket_client.hpp"
 #include <websocketpp/common/functional.hpp>
+#include <plugins/base/plugin_manage.hpp>
 
 using namespace sdk;
 using namespace plugins;
@@ -35,6 +36,16 @@ websocket_client::~websocket_client() {
     asio_thread_.join();
   
   client_.get_alog().write(websocketpp::log::alevel::app, "~websocket_client asio_thread_ over.");
+}
+
+void websocket_client::plugin_initialize(const options* params) {
+  std::cout << __FUNCTION__ << std::endl;
+}
+void websocket_client::plugin_startup() {
+  std::cout << __FUNCTION__ << std::endl;
+}
+void websocket_client::plugin_shutdown() {
+  std::cout << __FUNCTION__ << std::endl;
 }
 
 void websocket_client::run(const std::string& uri) {
@@ -294,18 +305,18 @@ bool verify_common_name(const char * hostname, X509 * cert) {
 bool verify_certificate(const char * hostname, bool preverified, boost::asio::ssl::verify_context& ctx) {
   std::cout << "verify_certificate " << "hostname: " << hostname << ", preverified: " << preverified << std::endl;
 
-  int depth = X509_STORE_CTX_get_error_depth(ctx.native_handle());
-  if (depth == 0 && preverified) {
-    X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
-    if (verify_subject_alternative_name(hostname, cert)) {
-      return true;
-    } else if (verify_common_name(hostname, cert)) {
-      return true;
-    } else {
-      std::cout << "verify_certificate verify failed, " << false << std::endl;
-      return true;
-    }
-  }
+  // int depth = X509_STORE_CTX_get_error_depth(ctx.native_handle());
+  // if (depth == 0 && preverified) {
+  //   X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
+  //   if (verify_subject_alternative_name(hostname, cert)) {
+  //     return true;
+  //   } else if (verify_common_name(hostname, cert)) {
+  //     return true;
+  //   } else {
+  //     std::cout << "verify_certificate verify failed, " << false << std::endl;
+  //     return true;
+  //   }
+  // }
   return true;
 }
 
@@ -376,6 +387,9 @@ try {
     std::cout << "local_thread::run wait." << std::endl;
     local_thread.join();
   } else {
+
+    auto pluginWs = sdk::plugins::base::plugins().register_plugin<websocket_client>();
+    pluginWs->plugin_startup();
     client.run(uri);
     std::cout << "Create local_thread." << std::endl;
     websocketpp::lib::thread local_thread(&websocket_client::loop_, &client);
