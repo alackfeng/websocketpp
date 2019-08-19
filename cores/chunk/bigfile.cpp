@@ -64,7 +64,7 @@ bigfile::blocktarget* bigfile::create_blocktarget(int blockindex) {
     return NULL;
   }
 
-  return new blocktarget(this, blockindex);
+  return new blocktarget(bigfile_ptr(this), blockindex);
 }
 
 

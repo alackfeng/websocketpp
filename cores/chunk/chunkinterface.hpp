@@ -26,13 +26,17 @@ public:
 
 };
 
+using bigfile_ptr = bigfile::bigfile_ptr;
+using blocktarget_type = bigfile::blocktarget_type;
+using stripinfo_type = chunk::stripinfo_type;
 class chunkmanager
 {
 public:
+  virtual ~chunkmanager() {}
   virtual int calc_blockcount(int chunksize) = 0;
-  virtual bigfile::blocktarget* create_blocktarget(int blockindex) = 0;
-  virtual list<chunk::stripinfo> alloc_blockstrips(int blockcount) = 0;
-  virtual bigfile* get_bigfile(int index) = 0;
+  virtual blocktarget_type* create_blocktarget(int blockindex) = 0;
+  virtual list<stripinfo_type> alloc_blockstrips(int blockcount) = 0;
+  virtual bigfile_ptr get_bigfile(int index) = 0;
   virtual const string& get_id() const = 0;
   virtual int get_blocksize() = 0;
   virtual onupdate* on_update() = 0;

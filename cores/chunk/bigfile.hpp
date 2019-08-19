@@ -16,12 +16,14 @@ class chunkmanager;
 class bigfile: public SyncFile
 {
 public:
+  typedef std::shared_ptr<bigfile> bigfile_ptr;
+
   class blocktarget
   {
   public:
     explicit blocktarget() {}
-    explicit blocktarget(bigfile* bf, int blockindex): bfile(bf) {
-      startindex = get_bigfile()->startindex;
+    explicit blocktarget(bigfile_ptr bf, int blockindex): bfile(bf) {
+      startindex = get_bigfile()->start_index();
       int64 internalindex = blockindex - startindex;
       block_startoffset_infile = internalindex * startindex;
     }
@@ -31,12 +33,14 @@ public:
     int writedata(int offsetinblock, const char* data, int offset, int len);
     int readdata(int offsetinblock, char* data, int offset, int len);
 
-    inline bigfile* get_bigfile() { return this->bfile; }
+    inline bigfile_ptr get_bigfile() { return this->bfile; }
 
     int startindex;
     int block_startoffset_infile;
-    bigfile* bfile;
+    bigfile_ptr bfile;
   };
+
+  typedef bigfile::blocktarget blocktarget_type;
 
 public:
   // bigfile() {}

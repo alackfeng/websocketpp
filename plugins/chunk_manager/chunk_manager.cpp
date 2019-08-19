@@ -63,7 +63,7 @@ onupdate* chunk_manager::on_update() {
 }
 
 bool chunk_manager::is_intact() {
-  list<std::unique_ptr<bigfile>>::iterator itr;
+  list<bigfile_ptr>::iterator itr;
   for(itr = bigfiles.begin(); itr != bigfiles.end(); ++itr) {
     if (!itr->get()->data()) {
       return false;
@@ -72,10 +72,10 @@ bool chunk_manager::is_intact() {
   return true;
 }
 
-void chunk_manager::flush_bits(list<chunk::stripinfo>& strips, bool value) {
-  list<chunk::stripinfo>::iterator itr = strips.begin();
+void chunk_manager::flush_bits(list<stripinfo_type>& strips, bool value) {
+  list<stripinfo_type>::iterator itr = strips.begin();
   for(; itr != strips.end(); ++itr) {
-    chunk::stripinfo sinfo = *itr;
+    stripinfo_type sinfo = *itr;
     if(!bsetio->set_bitfile(sinfo.startindex, sinfo.startindex + sinfo.blockcount, value)) {
       throw 980; // fail
     }
@@ -90,9 +90,9 @@ chunk* chunk_manager::loadchunk(string chunkid, string chunkinfo) {
   chunk* ck = new chunk(reinterpret_cast<sdk::cores::chunk::chunkmanager*>(this));
   ck->loadfrom((char*)(chunkinfo.c_str()));
 
-  list<chunk::stripinfo> strips = ck->getstrips();
+  list<stripinfo_type> strips = ck->getstrips();
 
-  list<std::unique_ptr<bigfile>>::iterator itr;
+  list<bigfile_ptr>::iterator itr;
   for(itr = bigfiles.begin(); itr != bigfiles.end(); ++itr) {
     bigfile* bf = itr->get();
     if (!bf->data()) {
@@ -100,9 +100,9 @@ chunk* chunk_manager::loadchunk(string chunkid, string chunkinfo) {
     }
 
     int endindex = bf->start_index() + bf->get_blockcount();
-    list<chunk::stripinfo>::iterator it = strips.begin();
+    list<stripinfo_type>::iterator it = strips.begin();
     for(; it != strips.end(); ++it) {
-      chunk::stripinfo sinfo = *it;
+      stripinfo_type sinfo = *it;
       if(sinfo.startindex >= bf->start_index() && sinfo.startindex < endindex) {
         throw 985; // Chunk数据已经损坏
       }
@@ -133,8 +133,8 @@ int chunk_manager::find_onestrip(int blockcount) {
   return nextClear;
 }
 
-list<chunk::stripinfo>* chunk_manager::alloc_blockstrips(int blockCount) {
-  list<chunk::stripinfo>* strips = new list<chunk::stripinfo>;
+list<stripinfo_type>* chunk_manager::alloc_blockstrips(int blockCount) {
+  list<stripinfo_type>* strips = new list<chunk::stripinfo>;
   int startindex = find_onestrip(blockCount);
   if (startindex >= 0) {
     strips->emplace_back(chunk::stripinfo(startindex, blockCount));
@@ -149,7 +149,7 @@ list<chunk::stripinfo>* chunk_manager::alloc_blockstrips(int blockCount) {
       int currentCount = nextSet - nextClear;
       if (allocCount + currentCount >= blockCount)
         currentCount = blockCount - allocCount;
-      strips->emplace_back(chunk::stripinfo(nextClear, currentCount));
+      strips->emplace_back(stripinfo_type(nextClear, currentCount));
       allocCount += currentCount;
     }
   }
@@ -255,7 +255,7 @@ void chunk_manager::write(outstreamhelp &os) {
   os.writeInt(blockcheckindex);
   os.writeUTF(bitfilepath);
   os.writeInt(bigfiles.size());
-  for(list<std::unique_ptr<bigfile>>::iterator itr = bigfiles.begin(); itr != bigfiles.end(); ++itr) {
+  for(list<bigfile_ptr>::iterator itr = bigfiles.begin(); itr != bigfiles.end(); ++itr) {
     itr->get()->writeinfo(os);
   }
   os.writeInt(lockedchunks.size());
@@ -314,7 +314,7 @@ void chunk_manager::resize(int sizemb) {
     bigFilePath = lastBigFilePath + id + std::to_string(bfIndex) + ".bf";
     ++bfIndex;
     } while (false); // new File(bigFilePath).exists());
-    bigfile* bigFile = new bigfile(reinterpret_cast<sdk::cores::chunk::chunkmanager*>(this), bigFilePath, allocBlocks, blockCount);
+    bigfile_ptr bigFile = std::make_shared<bigfile>(reinterpret_cast<sdk::cores::chunk::chunkmanager*>(this), bigFilePath, allocBlocks, blockCount);
     bigfiles.emplace_back(bigFile);
     allocBlocks += blockCount;
   }
@@ -337,7 +337,7 @@ void chunk_manager::update_spaceinfo() {
   writeto_file(filepath);
 }
 bigfile::blocktarget* chunk_manager::create_blocktarget(int blockindex) {
-  for(list<unique_ptr<bigfile>>::iterator itr = bigfiles.begin(); itr != bigfiles.end(); ++itr) {
+  for(list<bigfile_ptr>::iterator itr = bigfiles.begin(); itr != bigfiles.end(); ++itr) {
     bigfile::blocktarget* target = itr->get()->create_blocktarget(blockindex);
     if(target) { // create success, return 
       return target;
@@ -346,8 +346,8 @@ bigfile::blocktarget* chunk_manager::create_blocktarget(int blockindex) {
   }
   return NULL;
 }
-bigfile* chunk_manager::get_bigfile(int index) {
-  return bigfiles.front().get();
+bigfile_ptr& chunk_manager::get_bigfile(int index) {
+  return bigfiles.front();
 }
 
 

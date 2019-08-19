@@ -101,7 +101,7 @@ void chunk::extract_blocktargets() {
   int blockCount = this->get_blockcount();
   blocktargets = new bigfile::blocktarget[blockCount];
   int index = 0;
-  bigfile* lastBigFile = manager->get_bigfile(0);
+  bigfile_ptr lastBigFile = manager->get_bigfile(0);
   for (stripinfo stripInfo : strips) {
     int endIndex = stripInfo.startindex + stripInfo.blockcount;
     for (int blockIndex = stripInfo.startindex; blockIndex < endIndex; ++blockIndex) {
@@ -110,7 +110,7 @@ void chunk::extract_blocktargets() {
         target = manager->create_blocktarget(blockIndex);
         if (target == NULL)
           throw 157; // new BitDiskException("块索引异常！", _C_RD.CMCKBlockIndexException);
-        lastBigFile = target->get_bigfile();
+        // lastBigFile = target->get_bigfile();
       }
 
 

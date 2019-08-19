@@ -12,6 +12,7 @@ namespace chunk {
 using namespace std;
 
 
+using blocktarget_type = bigfile::blocktarget_type;
 class chunk: public streampecker
 {
 public:
@@ -30,6 +31,8 @@ public:
     int startindex;
     int blockcount;
   };
+
+  typedef chunk::stripinfo stripinfo_type;
 
 public:
   chunk(const string& id, const int& cksize)
@@ -118,7 +121,7 @@ private:
   list<stripinfo> strips;
   int deadtime = 0;
   bool locked = false;
-  bigfile::blocktarget* blocktargets = NULL;
+  blocktarget_type* blocktargets = NULL;
 
   static string CHUNK_VERSION; // chunk version
 };

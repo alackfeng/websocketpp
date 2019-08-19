@@ -59,7 +59,7 @@ public:
 
   chunk* loadchunk(string chunkid, string chunkinfo);
   int find_onestrip(int blockcount);
-  list<chunk::stripinfo>* alloc_blockstrips(int blockcount);
+  list<stripinfo_type>* alloc_blockstrips(int blockcount);
   void check_locks();
   chunk* alloc_chunk(string chunkid, int chunksize, int lifelen);
   void clear_lockedchunk();
@@ -69,8 +69,8 @@ public:
   void release_chunk(chunk* chunk);
   char* get_spaceinfo();
   void update_spaceinfo();
-  bigfile::blocktarget* create_blocktarget(int blockindex);
-  bigfile* get_bigfile(int index);
+  blocktarget_type* create_blocktarget(int blockindex);
+  bigfile_ptr& get_bigfile(int index);
 
 
 protected:
@@ -97,7 +97,8 @@ private:
   fstream bitfile;
   std::unique_ptr<bitsetio> bsetio;
 
-  list<std::unique_ptr<bigfile>> bigfiles;
+  // bigfile指针需要共享
+  list<bigfile_ptr> bigfiles; 
   int blockcheckindex;
   std::unique_ptr<onupdate> update;
 
