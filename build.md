@@ -7,7 +7,7 @@
 
 mkdir build; cd build
 cmake .. -DBUILD_EXAMPLES=ON -DBUILD_TESTS=ON -DOPENSSL_ROOT_DIR="/usr/local/opt/openssl"
-cmake .. -DBUILD_EXAMPLES=ON -DSDK_WEBSOCKET_TLS=ON -DOPENSSL_ROOT_DIR="/usr/local/opt/openssl" -DOPENSSL_INCLUDE_DIR="/usr/local/opt/openssl/include"
+cmake .. -DBUILD_EXAMPLES=ON -DBUILD_TESTS=ON -DSDK_WEBSOCKET_TLS=ON -DOPENSSL_ROOT_DIR="/usr/local/opt/openssl" -DOPENSSL_INCLUDE_DIR="/usr/local/opt/openssl/include"
 
 `````
 

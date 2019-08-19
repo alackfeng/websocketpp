@@ -30,8 +30,26 @@ endmacro ()
 # Use this macro when your module contains .cpp and .h files in several subdirectories.
 # Your sources variable needs to be WSPP_SOURCE_FILES and headers variable WSPP_HEADER_FILES.
 macro(add_source_folder folder_name)
-    file(GLOB H_FILES_IN_FOLDER_${folder_name} ${WEBSOCKETPP_ROOT}/plugins/${folder_name}/*.hpp  ${WEBSOCKETPP_ROOT}/plugins/${folder_name}/*.h)
-    file(GLOB CPP_FILES_IN_FOLDER_${folder_name} ${WEBSOCKETPP_ROOT}/plugins/${folder_name}/*.cpp  ${WEBSOCKETPP_ROOT}/plugins/${folder_name}/*.c)
+    file(GLOB H_FILES_IN_FOLDER_${folder_name} 
+        ${WEBSOCKETPP_ROOT}/plugins/${folder_name}/*.hpp  
+        ${WEBSOCKETPP_ROOT}/plugins/${folder_name}/*.h 
+        ${WEBSOCKETPP_ROOT}/cores/${folder_name}/*.hpp  
+        ${WEBSOCKETPP_ROOT}/cores/${folder_name}/*.h
+        ${WEBSOCKETPP_ROOT}/chunk/${folder_name}/*.hpp  
+        ${WEBSOCKETPP_ROOT}/chunk/${folder_name}/*.h
+        ${WEBSOCKETPP_ROOT}/utils/${folder_name}/*.hpp  
+        ${WEBSOCKETPP_ROOT}/utils/${folder_name}/*.h
+    )
+    file(GLOB CPP_FILES_IN_FOLDER_${folder_name} 
+        ${WEBSOCKETPP_ROOT}/plugins/${folder_name}/*.cpp  
+        ${WEBSOCKETPP_ROOT}/plugins/${folder_name}/*.c
+        ${WEBSOCKETPP_ROOT}/cores/${folder_name}/*.cpp  
+        ${WEBSOCKETPP_ROOT}/cores/${folder_name}/*.c
+        ${WEBSOCKETPP_ROOT}/chunk/${folder_name}/*.cpp  
+        ${WEBSOCKETPP_ROOT}/chunk/${folder_name}/*.c
+        ${WEBSOCKETPP_ROOT}/utils/${folder_name}/*.cpp  
+        ${WEBSOCKETPP_ROOT}/utils/${folder_name}/*.c
+    )
     source_group("Header Files\\${folder_name}" FILES ${H_FILES_IN_FOLDER_${folder_name}})
     source_group("Source Files\\${folder_name}" FILES ${CPP_FILES_IN_FOLDER_${folder_name}})
     set(WSPP_HEADER_FILES ${WSPP_HEADER_FILES} ${H_FILES_IN_FOLDER_${folder_name}})
@@ -46,6 +64,7 @@ macro (init_target NAME)
 
     # Include our own module path. This makes #include "x.h" 
     # work in project subfolders to include the main directory headers.
+    message (STATUS "init_target "  ${CMAKE_CURRENT_SOURCE_DIR})
     include_directories (${CMAKE_CURRENT_SOURCE_DIR})
 endmacro ()
 
@@ -61,6 +80,8 @@ macro (build_executable TARGET_NAME)
 
     ### add build link source
     add_source_folder(base)
+    add_source_folder(utils)
+    add_source_folder(chunk)
     add_executable (${TARGET_NAME} ${ARGN} ${WSPP_SOURCE_FILES} ${WSPP_SOURCE_FILES})
 
     include_directories (${WEBSOCKETPP_ROOT} ${WEBSOCKETPP_INCLUDE} ${WSPP_HEADER_FILES} )

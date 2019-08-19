@@ -236,6 +236,7 @@ endif()
 
 # Add main library
 add_subdirectory (websocketpp)
+add_subdirectory (cores)
 
 # Add examples
 if (BUILD_EXAMPLES)
