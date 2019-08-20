@@ -16,7 +16,7 @@ namespace sdk {
 namespace plugins {
 
 
-long random_chunkid() {
+inline long random_chunkid() {
   time_t timenow = chrono::system_clock::to_time_t(chrono::system_clock::now());
   return timenow;
 }
@@ -29,7 +29,7 @@ public:
     std::cout << "chunk_manager::" << __FUNCTION__ << std::endl;
   }
 
-  void plugin_initialize(const options* params) {
+  void plugin_initialize(const options* params = NULL) {
     std::cout << "chunk_manager::" << __FUNCTION__ << std::endl;
   }
   void plugin_startup() {
@@ -44,23 +44,28 @@ public:
   chunk_manager(string filepath, onupdate* update)
     :chunk_manager(string(""), filepath, update) {}
 
-  // 获取update
-  onupdate* on_update();
+
   bool is_intact();
   void flush_bits(list<chunk::stripinfo>& strips, bool value);
-  inline string& get_id() { return id; }
   inline int64 get_totalspace() { return (int64) totalblock * blocksize; }
   inline int64 get_usedblock() { return usedblock; }
   inline int64 get_freespace() { return (int64)(totalblock - get_usedblock()) * blocksize; }
   inline int64 get_usedspace() { return (int64) get_usedblock() * blocksize; }
-  inline int get_blocksize() { return blocksize; }
-  inline int calc_blockcount(int chunksize) { return (chunksize + blocksize - 1) / blocksize; }
-  inline const string& get_id() const { return id; }
+
+
+  // impliment chunkmanager
+  inline int calc_blockcount(int chunksize) override { return (chunksize + blocksize - 1) / blocksize; }
+  blocktarget_type* create_blocktarget(int blockindex) override;
+  list<stripinfo_type>* alloc_blockstrips(int blockcount) override;
+  bigfile_ptr get_bigfile(int index) override;
+  inline const string& get_id() const override { return id; }
+  inline int get_blocksize() override { return blocksize; }
+  onupdate* on_update() override; // 获取update
+
 
   chunk* loadchunk(string chunkid, string chunkinfo);
   int find_onestrip(int blockcount);
 
-  list<stripinfo_type>* alloc_blockstrips(int blockcount);
   void check_locks();
   chunk* alloc_chunk(string chunkid, int chunksize, int lifelen);
   void clear_lockedchunk();
@@ -70,28 +75,29 @@ public:
   void release_chunk(chunk* chunk);
   char* get_spaceinfo();
   void update_spaceinfo();
-  blocktarget_type* create_blocktarget(int blockindex);
-  bigfile_ptr get_bigfile(int index);
+
 
 
 protected:
-  void write(outstreamhelp &os);
-  void read(instreamhelp &is);
+
+  // impliment streampecker 
+  void write(outstreamhelp &os) override;
+  void read(instreamhelp &is) override;
 
   void resize(int sizemb);
-  void writeto_file(string filepath);
-  void readfrom_file(string filepath);
+  
 private:
   chunk_manager(string id, string cmpath, int sizemb, onupdate* update);
   chunk_manager(string id, string filepath, onupdate* update);
 
+
 private:
-  string filepath;
-  string version;
-  int blocksize;
-  string id;
-  int totalblock;
-  int usedblock;
+  string filepath;  // cm文件路径
+  string version;   // cm版本
+  int blocksize;    // 元数据大小
+  string id;        // chunkmanager ID
+  int totalblock;   // 支撑的元数据块个数
+  int usedblock;    // 已经使用数量
   
   // 索引文件,标记block是否被使用了
   string bitfilepath;
@@ -103,9 +109,8 @@ private:
   int blockcheckindex;
   std::unique_ptr<onupdate> update;
 
+  // 
   list<std::unique_ptr<chunk>> lockedchunks;
-
-
 
   static string CHUNK_MANAGER_VERSION_1_0; // chunkmanager version 1.0 
   static string CHUNK_MANAGER_VERSION_1_1; // chunkmanager version 1.1

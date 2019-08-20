@@ -27,14 +27,14 @@ SyncFile::SyncFile(const char *_filename, bool _onlyRead) : file(nullptr), isRea
 }
 
 void SyncFile::open(const char* _filename, bool _isReadOnly){
-  file = fopen(_filename, _isReadOnly ? "rb" : "rb+");
+  file = fopen(_filename, _isReadOnly ? "r" : "r+");
   if (!file){
     bdlog_info("SyncFile::open %s\n", _filename);
     if(_isReadOnly) {
       bdlog_error("SyncFile::open readonly ERROR SYNCFILE_FILE_OPEN_FAILED %s\n", _filename);
       throw CodeException::SYNCFILE_FILE_OPEN_FAILED;
     }
-    file = fopen(_filename, "wb+");
+    file = fopen(_filename, "w+");
     if(!file) {
       bdlog_error("SyncFile::open w+ ERROR SYNCFILE_FILE_OPEN_FAILED %s\n", _filename);
       throw CodeException::SYNCFILE_FILE_OPEN_FAILED;
@@ -68,7 +68,7 @@ size_t SyncFile::setLength(int64 _fileSize) {
     }
 
     fclose(file);
-    file = fopen(filename, "wb+");
+    file = fopen(filename, "w+");
     if(!file) {
       bdlog_error("SyncFile::setLength - w+ ERROR SYNCFILE_FILE_SETLENGHT_FAILED %s\n", filename);
       throw CodeException::SYNCFILE_FILE_SETLENGHT_FAILED;
@@ -163,6 +163,9 @@ int SyncFile::truncFile(int64 len) {
 
 bool SyncFile::isOpen() {
   return file != nullptr;
+}
+int SyncFile::flushFile() {
+  return ::flushFile(file);
 }
 
 } /// namespace utils {

@@ -1,4 +1,6 @@
-#pragma once
+#ifndef SDK_CORES_UTILS_COMMON_H
+#define SDK_CORES_UTILS_COMMON_H
+
 #include <stdio.h>
 #include <memory.h>
 #include <mutex>
@@ -99,6 +101,12 @@ inline int64 getFileLength(FILE* file) {
   return getFilePos(file);
 }
 
+inline int flushFile(FILE* file) {
+  if(!file)
+    return -1;
+  return fflush(file);
+}
+
 
 #define localLock(lockObject) unique_lock<recursive_mutex> locker_##lockObject(lockObject)
 #define lockThis() unique_lock<recursive_mutex> locker_this(*this)
@@ -107,3 +115,5 @@ inline int64 getFileLength(FILE* file) {
 
 #define localLockPtr(lockObject) unique_lock<recursive_mutex> locker_##lockObject(*lockObject)
 #define syncPtr(lockObject)  for(localLockPtr(lockObject); locker_##lockObject.owns_lock(); locker_##lockObject.unlock())
+
+#endif

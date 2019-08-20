@@ -5,18 +5,20 @@ namespace cores {
 namespace utils {
 
 
-void outstreamhelp::write_(int b) {
+void outstreamhelp::write_(unsigned char b) {
+  LOG_F(INFO, "outstreamhelp::write_ - written %lld, int %d.", written, b);
   write(written, &b, 1);
   incCount(1);
 }
 void outstreamhelp::write_(void *b, int off, int len)
 {
-  write(written, (char*)b+off, len);
+  LOG_F(INFO, "outstreamhelp::write_ - written %lld, off %d, len %d, %s.", written, off, len, (unsigned char*)b+off);
+  write(written, (unsigned char*)b+off, len);
   incCount(len);
 }
 
 void outstreamhelp::flush() {
-// this->flush();
+  this->flushFile();
 }
 
 void outstreamhelp::writeBoolean(bool v) {
@@ -42,6 +44,7 @@ void outstreamhelp::writeChar(int v) {
 }
 
 void outstreamhelp::writeInt(int v) {
+  LOG_F(INFO, "outstreamhelp::writeInt - INT %d.", v);
   this->write_((v >> 24) & 0xFF);
   this->write_((v >> 16) & 0xFF);
   this->write_((v >>  8) & 0xFF);
@@ -49,16 +52,16 @@ void outstreamhelp::writeInt(int v) {
 }
 
 void outstreamhelp::writeLong(long v) {
-  writeBuffer[0] = (char)(v >> 56);
-  writeBuffer[1] = (char)(v >> 48);
-  writeBuffer[2] = (char)(v >> 40);
-  writeBuffer[3] = (char)(v >> 32);
-  writeBuffer[4] = (char)(v >> 24);
-  writeBuffer[5] = (char)(v >> 16);
-  writeBuffer[6] = (char)(v >>  8);
-  writeBuffer[7] = (char)(v >>  0);
+  memset(writeBuffer, 0, 8);
+  writeBuffer[0] = (unsigned char)(v >> 56);
+  writeBuffer[1] = (unsigned char)(v >> 48);
+  writeBuffer[2] = (unsigned char)(v >> 40);
+  writeBuffer[3] = (unsigned char)(v >> 32);
+  writeBuffer[4] = (unsigned char)(v >> 24);
+  writeBuffer[5] = (unsigned char)(v >> 16);
+  writeBuffer[6] = (unsigned char)(v >>  8);
+  writeBuffer[7] = (unsigned char)(v >>  0);
   this->write_(writeBuffer, 0, 8);
-  incCount(8);
 }
 
 void outstreamhelp::writeFloat(float v) {
@@ -86,11 +89,11 @@ void outstreamhelp::writeChars(std::string s) {
   incCount(len * 2);
 }
 
-void outstreamhelp::writeUTF(std::string str) {
+void outstreamhelp::writeUTF(const std::string& str) {
   writeUTF(str, this);
 }
 
-int outstreamhelp::writeUTF(std::string str, outstreamhelp* this_) {
+int outstreamhelp::writeUTF(const std::string& str, outstreamhelp* this_) {
   int strlen = str.length();
   int utflen = 0;
   int c, count = 0;
@@ -153,27 +156,30 @@ int outstreamhelp::writeUTF(std::string str, outstreamhelp* this_) {
 //////////////// instreamhelp ================
 
 int instreamhelp::read_(void* b, int len) {
+  LOG_F(INFO, "instreamhelp::read_ - offset %lld.", offset);
   return this->read(offset, b, len);
 }
 
-int instreamhelp::read_(char* b, int off, int len) {
+int instreamhelp::read_(unsigned char* b, int off, int len) {
+  LOG_F(INFO, "instreamhelp::read_ - offset %lld, off %d, len %d.", offset, off, len);
   return this->read(offset, b+off, len);
 }
 
-void instreamhelp::readFully(char* b, int len) {
+void instreamhelp::readFully(unsigned char* b, int len) {
   readFully(b, 0, len);
 }
 
-void instreamhelp::readFully(char* b, int off, int len) {
+void instreamhelp::readFully(unsigned char* b, int off, int len) {
   if (len < 0)
-    throw 124; // new IndexOutOfBoundsException();
+    throw sdkexception(STREAM_NOT_SUPPORT_NEGATIVE_NUMBER);
   int n = 0;
   while (n < len) {
     int count = this->read_(b, off + n, len - n);
     if (count < 0)
-      throw 167; // new EOFException();
+      throw sdkexception(STREAM_NOT_SUPPORT_NEGATIVE_NUMBER);
     n += count;
   }
+  incCount(n);
 }
 
 int instreamhelp::skipBytes(int n) {
@@ -196,12 +202,14 @@ bool instreamhelp::readBoolean() {
   return (ch != 0);
 }
 
-char instreamhelp::readByte() {
-  char ch;
-  this->read_(&ch, 1);
-  if (ch < 0)
-    throw 199; // new EOFException();
-  return (char)(ch);
+unsigned char instreamhelp::readByte() {
+  unsigned char ch;
+  int reallen = this->read_(&ch, 1);
+  LOG_F(INFO, "instreamhelp::readByte - char %d, len %d.", ch, reallen);
+  incCount(reallen); // add inc offset
+  // if (ch < 0)
+  //   throw sdkexception(STREAM_NOT_SUPPORT_NEGATIVE_NUMBER); // not support negative number
+  return (unsigned char)(ch);
 }
 
 int instreamhelp::readUnsignedByte() {
@@ -237,17 +245,19 @@ char instreamhelp::readChar() {
   return (char)((ch1 << 8) + (ch2 << 0));
 }
 
+// 支持负数的
 int instreamhelp::readInt() {
-  int ch1 = this->readByte();
-  int ch2 = this->readByte();
-  int ch3 = this->readByte();
-  int ch4 = this->readByte();
+  unsigned char ch1 = this->readByte();
+  unsigned char ch2 = this->readByte();
+  unsigned char ch3 = this->readByte();
+  unsigned char ch4 = this->readByte();
   if ((ch1 | ch2 | ch3 | ch4) < 0)
-    throw  125; //new EOFException();
+    throw sdkexception(STREAM_NOT_SUPPORT_NEGATIVE_NUMBER);
   return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
 }
 
 long instreamhelp::readLong() {
+  memset(readBuffer, 0, 8);
   readFully(readBuffer, 0, 8);
   return (((long)readBuffer[0] << 56) +
     ((long)(readBuffer[1] & 255) << 48) +
@@ -277,8 +287,8 @@ std::string instreamhelp::readUTF() {
 
 std::string instreamhelp::readUTF(instreamhelp& in) {
   int utflen = in.readUnsignedShort();
-  char* bytearr = NULL;
-  char* chararr = NULL;
+  unsigned char* bytearr = NULL;
+  unsigned char* chararr = NULL;
   // if (in instanceof DataInputStream) {
   //     DataInputStream dis = (DataInputStream)in;
   //     if (dis.bytearr.length < utflen){
@@ -288,8 +298,8 @@ std::string instreamhelp::readUTF(instreamhelp& in) {
   //     chararr = dis.chararr;
   //     bytearr = dis.bytearr;
   // } else {
-    bytearr = new char[utflen];
-    chararr = new char[utflen];
+    bytearr = new unsigned char[utflen];
+    chararr = new unsigned char[utflen];
   // }
 
   int c, char2, char3;
@@ -348,7 +358,7 @@ std::string instreamhelp::readUTF(instreamhelp& in) {
     }
   }
   // The number of chars produced may be less than utflen
-  return std::string(chararr).substr(0, chararr_count);
+  return std::string((char*)chararr).substr(0, chararr_count);
 }
 
 } /// namespace utils {

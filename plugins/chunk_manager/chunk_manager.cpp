@@ -14,8 +14,8 @@ string chunk_manager::CHUNK_MANAGER_VERSION_1_1 = "1.1";
 
 chunk_manager::chunk_manager(string id, string cmpath, int sizemb, onupdate* update)
 :update(update) {
-  std::cout << "chunk_manager::" << __FUNCTION__ << ", id " << id 
-    << ", path: " << cmpath << ", size " << sizemb << std::endl;
+  LOG_F(INFO, "chunk_manager::chunk_manager - id %s, path %s, sizemb %d, onupdate %p", 
+    id.c_str(), cmpath.c_str(), sizemb, update);
 
   this->version = chunk_manager::CHUNK_MANAGER_VERSION_1_1;
   this->id = id;
@@ -23,34 +23,55 @@ chunk_manager::chunk_manager(string id, string cmpath, int sizemb, onupdate* upd
   int64 size = sizemb * 1024L * 1024L;
   this->totalblock = int(size / blocksize);
   if (totalblock < MIN_BIG_FILE_BLOCK_COUNT) { // "请至少开放" + (totalBlock * (blockSize / 1024) / 1024) + "MB磁盘空间！"
-    throw 10;
+    int szmb = ((int64)totalblock * (blocksize / 1024) / 1024);
+    LOG_F(ERROR, "chunk_manager::chunk_manager - id %s, cmpath %s, at least %d MB磁盘空间！", 
+      id.c_str(), cmpath.c_str(), szmb);
+    std::string err_msg("请至少开放 ");
+    err_msg += std::to_string(szmb);
+    err_msg += " MB磁盘空间！";
+    throw sdkexception(CHUNKMANAGER_SIZE_MIN_LIMIT, err_msg);
   }
+
   this->usedblock = 0;
+  LOG_F(INFO, "chunk_manager::chunk_manager - id %s, path %s, version %s, blocksize %d, totalBlock %d.", 
+    id.c_str(), cmpath.c_str(), version.c_str(), blocksize, totalblock);
 
-  // 创建索引文件缓存，大小为一个bigfile的block数
-  std::unique_ptr<bitsetio> bsetindex(new bitsetio(totalblock));
-  bsetio = std::move(bsetindex);
-
+  if(!update) {
+    LOG_F(ERROR, "chunk_manager::chunk_manager - id %s, cmpath %s, need onUpdate callback ", id.c_str(), cmpath.c_str());
+    throw sdkexception(CHUNKMANAGER_NEED_ONUPDATE);
+  }
   // 获取索引文件可用磁盘空间路径
   int bitsize = BITSIZE(totalblock); // bsetio->size();
   string filepathbit = update->getSpacePath(bitsize);
   if (filepathbit == "") { // 无法获取有效的磁盘空间，可使用空间如何判断？length
-    throw 100;
+    LOG_F(ERROR, "chunk_manager::chunk_manager - id %s, cmpath %s, not get filepath for bitset.", id.c_str(), cmpath.c_str());
+    throw sdkexception(CHUNKMANAGER_NEED_SPACEPATH);
   }
+  // 返回的路径是否存在，并且目录？？？？ filepath or cmpath
+
+
   filepathbit += this->id + ".bs"; // 索引文件,标记block是否被使用了
+  LOG_F(INFO, "chunk_manager::chunk_manager - id %s, cmpath %s, get bitset path %s.", id.c_str(), cmpath.c_str(), filepathbit.c_str());
+  // 创建索引文件缓存，大小为一个bigfile的block数
+  std::unique_ptr<bitsetio> bsetindex(new bitsetio(totalblock));
+  bsetio = std::move(bsetindex);
   bsetio->init_bitfile(filepathbit);
 
   this->totalblock = 0;
   this->filepath = cmpath + "chunks.cm";
-  resize(sizemb);
-  writeto_file(this->filepath);
+  // resize(sizemb);
+  writeToFile(this->filepath);
 
   std::cout << "update " << this->update.get() << std::endl;
 }
 chunk_manager::chunk_manager(string id, string filepath, onupdate* update) {
   this->update = std::unique_ptr<onupdate>(update);
+  if(!update) {
+    LOG_F(ERROR, "chunk_manager::chunk_manager - id %s, cmpath %s, need onUpdate callback ", id.c_str(), filepath.c_str());
+    throw sdkexception(CHUNKMANAGER_NEED_ONUPDATE);
+  }
   this->filepath = filepath + "chunks.cm";
-  readfrom_file(this->filepath);
+  readFromFile(this->filepath);
   if (id != "" && this->id != id) {
     throw 115; // 数据文件损坏
   }
@@ -247,6 +268,9 @@ void chunk_manager::release_chunk(chunk* chunk) {
 }
 
 void chunk_manager::write(outstreamhelp &os) {
+
+  LOG_F(INFO, "chunk_manager::write - os.");
+
   os.writeUTF(version);
   os.writeUTF(id);
   os.writeInt(blocksize);
@@ -263,8 +287,10 @@ void chunk_manager::write(outstreamhelp &os) {
     itr->get()->writeinfo(os);
   } 
 
+  LOG_F(INFO, "chunk_manager::write - os over.");
 }
 void chunk_manager::read(instreamhelp &is) {
+  LOG_F(INFO, "chunk_manager::read - is.");
   version = is.readUTF();
   blockcheckindex = (version == chunk_manager::CHUNK_MANAGER_VERSION_1_0) ? 0 : -1;
   id = is.readUTF();
@@ -287,7 +313,7 @@ void chunk_manager::read(instreamhelp &is) {
   if(calcucount != totalblock) {
     throw 987; // Block Count Error
   }
-
+  LOG_F(INFO, "chunk_manager::read - is.over.");
 }
 
 void chunk_manager::resize(int sizemb) {
@@ -323,18 +349,12 @@ void chunk_manager::resize(int sizemb) {
   update_spaceinfo();
 
 }
-void chunk_manager::writeto_file(string filepath) {
-
-}
-void chunk_manager::readfrom_file(string filepath) {
-
-}
 
 char* chunk_manager::get_spaceinfo() {
   return writeToBytes();
 }
 void chunk_manager::update_spaceinfo() {
-  writeto_file(filepath);
+  writeToFile(filepath);
 }
 bigfile::blocktarget* chunk_manager::create_blocktarget(int blockindex) {
   for(list<bigfile_ptr>::iterator itr = bigfiles.begin(); itr != bigfiles.end(); ++itr) {
@@ -352,7 +372,7 @@ bigfile_ptr chunk_manager::get_bigfile(int index) {
 
 
 
-#ifndef TEST_MAIN
+#ifdef TEST_MAIN
 int main() {
   sdk::plugins::chunk_manager chunkmgr("path", 12*1024*1024, NULL);
   chunkmgr.plugin_startup();

@@ -136,6 +136,10 @@ macro (final_target)
     endforeach()
 endmacro ()
 
+macro (link_sdklib)
+    target_link_libraries (${TARGET_NAME} "chunk_manager")
+endmacro ()
+
 macro (link_boost)
     target_link_libraries (${TARGET_NAME} ${Boost_LIBRARIES})
 endmacro ()

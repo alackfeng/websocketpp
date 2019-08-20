@@ -31,22 +31,24 @@ public:
 class instreamhelp: public SyncFile
 {
 public:
-  instreamhelp(const char* filepath)
+  explicit instreamhelp(const char* filepath)
     :SyncFile(filepath, true) {}
+  explicit instreamhelp(const string& filepath)
+    :instreamhelp(filepath.c_str()) {}
   ~instreamhelp() {}
   
   int read_(void* b, int len);
-  int read_(char* b, int off, int len);
-  void readFully(char* b, int len);
-  void readFully(char* b, int off, int len);
+  int read_(unsigned char* b, int off, int len);
+  void readFully(unsigned char* b, int len);
+  void readFully(unsigned char* b, int off, int len);
   int skipBytes(int n);
   bool readBoolean();
-  char readByte();
+  unsigned char readByte();
   int readUnsignedByte();
   short readShort();
   int readUnsignedShort();
   char readChar();
-  int readInt();
+  int readInt(); // 支持负数的
   long readLong();
   float readFloat();
   double readDouble();
@@ -55,7 +57,17 @@ public:
   std::string readUTF(instreamhelp& in);
 
 private:
-  char readBuffer[8] = {0};
+
+  inline void incCount(int value) {
+      int64 temp = offset + value;
+      if (temp < 0) {
+          throw 123; // 
+          // temp = Integer.MAX_VALUE;
+      }
+      offset = temp;
+  }
+
+  unsigned char readBuffer[8] = {0};
   char bytearr[80] = {0};
   char chararr[80] = {0};
   int64 offset = 0;
@@ -64,11 +76,13 @@ private:
 class outstreamhelp: public SyncFile
 {
 public:
-  outstreamhelp(const char* filepath)
+  explicit outstreamhelp(const char* filepath)
     :SyncFile(filepath, false) {}
+  explicit outstreamhelp(const string& filepath)
+    :outstreamhelp(filepath.c_str()) {}
   ~outstreamhelp() {}
 
-  void write_(int b);
+  void write_(unsigned char b);
   void write_(void *b, int off, int len);
   void flush();
   void writeBoolean(bool v);
@@ -81,8 +95,8 @@ public:
   void writeDouble(double v);
   void writeBytes(std::string s);
   void writeChars(std::string s);
-  void writeUTF(std::string str);
-  int writeUTF(std::string str, outstreamhelp* this_);
+  void writeUTF(const std::string& str);
+  int writeUTF(const std::string& str, outstreamhelp* this_);
   inline int size() {  return written; }
 
 private:
@@ -98,7 +112,7 @@ private:
 
   int64 written = 0; 
   char* bytearr = NULL;
-  char writeBuffer[8] = {0};
+  unsigned char writeBuffer[8] = {0};
 };
 
 class streampecker

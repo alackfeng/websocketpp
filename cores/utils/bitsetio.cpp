@@ -6,24 +6,24 @@ namespace cores {
 namespace utils {
 
 bool bitsetio::init_bitfile(const string& filepath) {
-  this->filepath = filepath;
-  int bitfilesize = BITSIZE(size_);
+  // this->filepath = filepath;
+  // int bitfilesize = BITSIZE(size_);
 
-  bffile.open(filepath, ios::app|ios::out|ios::in);
-  if (!bffile.is_open()) {
-    throw 111;
-  }
-  // 写入初始数据，并大小
-  char buffer[4096] = {0};
-  for(int offset = 0; offset < bitfilesize; offset += 4096) {
-    bffile.seekg(offset, ios::beg);
-    bffile.write(buffer, std::min(4096, bitfilesize-offset));
-  }
-  // 文件大小
-  streampos size = bffile.tellg();
-  if (size != bitfilesize) {
-    throw 112;
-  }
+  // bffile.open(filepath, ios::app|ios::out|ios::in);
+  // if (!bffile.is_open()) {
+  //   throw 111;
+  // }
+  // // 写入初始数据，并大小
+  // char buffer[4096] = {0};
+  // for(int offset = 0; offset < bitfilesize; offset += 4096) {
+  //   bffile.seekg(offset, ios::beg);
+  //   bffile.write(buffer, std::min(4096, bitfilesize-offset));
+  // }
+  // // 文件大小
+  // streampos size = bffile.tellg();
+  // if (size != bitfilesize) {
+  //   throw 112;
+  // }
   return true;
 }
 

@@ -23,6 +23,17 @@ file (GLOB SOURCE_FILES ckmanager_test.cpp)
 
 init_target (ckmanager_test)
 build_test (${TARGET_NAME} ${SOURCE_FILES} ${HEADER_FILES})
+link_sdklib ()
+link_boost ()
+final_target ()
+set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "test")
+
+## instreamhelp or outstreamhelp
+file (GLOB SOURCE_FILES streamhelp_test.cpp)
+
+init_target (streamhelp_test)
+build_test (${TARGET_NAME} ${SOURCE_FILES} ${HEADER_FILES})
+link_sdklib ()
 link_boost ()
 final_target ()
 set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "test")

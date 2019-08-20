@@ -18,11 +18,11 @@ public:
   // 获取可用空间的路径
   virtual string getSpacePath(int64 spaceSize) = 0;
   // 更新保存ChunkManager属性信息
-  virtual bool onUpdateChunk(string chunkID, string chunkInfo); // couchDB启动时要维护
+  virtual bool onUpdateChunk(string chunkID, string chunkInfo) = 0; // couchDB启动时要维护
   // 更新保存Chunk属性信息
-  virtual bool onReleaseChunk(string chunkID); // couchDB启动时要维护
+  virtual bool onReleaseChunk(string chunkID) = 0; // couchDB启动时要维护
   //
-  virtual void onSpaceCheckError(int actualMB);
+  virtual void onSpaceCheckError(int actualMB) = 0;
 
 };
 

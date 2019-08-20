@@ -7,8 +7,14 @@ namespace utils {
 
 
 std::map<int, std::string> err_messages = std::map<int, std::string>{
+  // base
+  {STREAM_NOT_SUPPORT_NEGATIVE_NUMBER, "序列化暂时不支持负数"},
+
+
+  // 
   {std::make_pair(FILE_OPEN_ERROR, "打开文件失败")},
   {std::make_pair(FILE_FDSOCK_ERROR, "file socket error")},
+
 
   // bigfile
   {BIGFILE_PTR_RELEASED, "bigfile已经释放了"},
@@ -24,6 +30,9 @@ std::map<int, std::string> err_messages = std::map<int, std::string>{
   // chunkmanager
   {CHUNKMANAGER_ID_NOT_FIX, "chunkmanager不存在bigfile"},
   {CHUNKMANAGER_META_BREAKDOWN, "chunkmanager元数据损坏！"},
+  {CHUNKMANAGER_SIZE_MIN_LIMIT, "chunkmanager最少开放MB磁盘空间！"},
+  {CHUNKMANAGER_NEED_ONUPDATE, "chunkmanager需求onUpdate回调类"},
+  {CHUNKMANAGER_NEED_SPACEPATH, "chunkmanager未获取可用空间"},
 };
 
 

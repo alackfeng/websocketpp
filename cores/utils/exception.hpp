@@ -78,10 +78,15 @@ enum class ChunkError: int
 
 enum error_code {
 
+  // base
+  STREAM_NOT_SUPPORT_NEGATIVE_NUMBER = 100100,
+
   // filestream
   FILE_OPEN_ERROR = 3000,
   FILE_FDSOCK_ERROR,
   FILE_READWRITE_LEN_ERROR,
+
+
 
   // bigfile 
   BIGFILE_PTR_RELEASED = 400100,
@@ -97,6 +102,9 @@ enum error_code {
   // chunkmanager
   CHUNKMANAGER_ID_NOT_FIX = 400300,
   CHUNKMANAGER_META_BREAKDOWN,
+  CHUNKMANAGER_SIZE_MIN_LIMIT,
+  CHUNKMANAGER_NEED_ONUPDATE,
+  CHUNKMANAGER_NEED_SPACEPATH,
 
   // max -1
   ERR_CODE_GENERAL = -1,

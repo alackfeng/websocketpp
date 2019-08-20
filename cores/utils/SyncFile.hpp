@@ -37,6 +37,7 @@ public:
   void init(const char* _filename, bool _onlyRead);
   int truncFile(int64 len);
   bool isOpen();
+  int flushFile();
 };
 
 } /// namespace utils {
