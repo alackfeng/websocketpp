@@ -346,7 +346,7 @@ bigfile::blocktarget* chunk_manager::create_blocktarget(int blockindex) {
   }
   return NULL;
 }
-bigfile_ptr& chunk_manager::get_bigfile(int index) {
+bigfile_ptr chunk_manager::get_bigfile(int index) {
   return bigfiles.front();
 }
 

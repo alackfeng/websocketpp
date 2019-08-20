@@ -21,7 +21,7 @@ long random_chunkid() {
   return timenow;
 }
 
-class chunk_manager: public plugin<chunk_manager>, public streampecker
+class chunk_manager: public plugin<chunk_manager>, public streampecker, public chunkmanager
 {
 public:
   chunk_manager() = delete;
@@ -59,6 +59,7 @@ public:
 
   chunk* loadchunk(string chunkid, string chunkinfo);
   int find_onestrip(int blockcount);
+
   list<stripinfo_type>* alloc_blockstrips(int blockcount);
   void check_locks();
   chunk* alloc_chunk(string chunkid, int chunksize, int lifelen);
@@ -70,7 +71,7 @@ public:
   char* get_spaceinfo();
   void update_spaceinfo();
   blocktarget_type* create_blocktarget(int blockindex);
-  bigfile_ptr& get_bigfile(int index);
+  bigfile_ptr get_bigfile(int index);
 
 
 protected:

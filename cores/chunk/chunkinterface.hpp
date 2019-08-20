@@ -35,7 +35,7 @@ public:
   virtual ~chunkmanager() {}
   virtual int calc_blockcount(int chunksize) = 0;
   virtual blocktarget_type* create_blocktarget(int blockindex) = 0;
-  virtual list<stripinfo_type> alloc_blockstrips(int blockcount) = 0;
+  virtual list<stripinfo_type>* alloc_blockstrips(int blockcount) = 0;
   virtual bigfile_ptr get_bigfile(int index) = 0;
   virtual const string& get_id() const = 0;
   virtual int get_blocksize() = 0;

@@ -15,9 +15,12 @@ bigfile::bigfile(chunkmanager* manager, string filepath, int startindex, int blo
 :manager(manager), startindex(startindex), blockcount(blockcount), filepath(filepath) {
 
   version = bigfile::BIG_FILE_VERSION;
+  LOG_F(INFO, "bigfile::bigfile call. %p, version %s, filepath %s, startindex %d, blockcount %d.", 
+    manager, version.c_str(), filepath.c_str(), startindex, blockcount);  
 
   this->open(filepath.c_str(), false);
   this->setLength(this->get_size());
+  LOG_F(INFO, "bigfile::bigfile - create bigfile filepath %s, setLength %d", filepath.c_str(), this->get_size());
 }
 
 bigfile::bigfile(chunkmanager* manager, instreamhelp& is)
@@ -61,10 +64,12 @@ void bigfile::writeinfo(outstreamhelp& os) {
 bigfile::blocktarget* bigfile::create_blocktarget(int blockindex) {
   if (blockindex < startindex || blockindex >= startindex + blockcount) {
     // 不属于我
+    LOG_F(ERROR, "blockindex %d not between %d and %d", blockindex, startindex, startindex + blockcount);
     return NULL;
   }
+  LOG_F(INFO, "create_blocktarget - blockindex %d, startindex %d, blockcount %d", blockindex, startindex, blockcount);
 
-  return new blocktarget(bigfile_ptr(this), blockindex);
+  return new blocktarget(self(), blockindex);
 }
 
 
@@ -99,6 +104,7 @@ int bigfile::blocktarget::readdata(int offsetinblock, char* data, int offset, in
 
 int bigfile::get_blocksize() { return manager->get_blocksize(); }
 int64 bigfile::get_size() { return (int64)get_blocksize() * blockcount; }
+
 } /// namespace chunk {
 } /// namespace cores {
 } /// namespace sdk {

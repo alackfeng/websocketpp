@@ -9,6 +9,7 @@
 #include <string>
 #include <map>
 #include "cores/utils/Common.h"
+#include "cores/utils/logger.hpp"
 
 
 #endif

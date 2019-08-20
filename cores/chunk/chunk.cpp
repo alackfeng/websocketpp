@@ -129,8 +129,8 @@ int chunk::writedata(int offsetInChunk, char* data, int len) {
     int blockCount = manager->calc_blockcount(chunksize);
     int newBlockCount = manager->calc_blockcount(newChunkSize);
     if (newBlockCount > blockCount) {
-      list<stripinfo> strips = manager->alloc_blockstrips(newBlockCount - blockCount);
-      addstrips(strips);
+      list<stripinfo>* strips = manager->alloc_blockstrips(newBlockCount - blockCount);
+      addstrips(*strips);
       chunksize = newChunkSize;
       extract_blocktargets();
     }

@@ -13,19 +13,19 @@ namespace chunk {
 
 using namespace std;
 class chunkmanager;
-class bigfile: public SyncFile
+class bigfile: public SyncFile, public std::enable_shared_from_this<bigfile>
 {
 public:
   typedef std::shared_ptr<bigfile> bigfile_ptr;
 
+  // 大文件中块处理
   class blocktarget
   {
   public:
-    explicit blocktarget() {}
+    explicit blocktarget(): block_startoffset_infile(-1) {}
     explicit blocktarget(bigfile_ptr bf, int blockindex): bfile(bf) {
-      startindex = get_bigfile()->start_index();
-      int64 internalindex = blockindex - startindex;
-      block_startoffset_infile = internalindex * startindex;
+      int startindex = bfile->startindex;
+      block_startoffset_infile = (int64)(blockindex - startindex) * bfile->get_blocksize();
     }
     ~blocktarget() {
     }
@@ -35,18 +35,21 @@ public:
 
     inline bigfile_ptr get_bigfile() { return this->bfile; }
 
-    int startindex;
-    int block_startoffset_infile;
+    int block_startoffset_infile; // 
     bigfile_ptr bfile;
   };
 
   typedef bigfile::blocktarget blocktarget_type;
 
 public:
-  // bigfile() {}
+  bigfile() {}
   bigfile(chunkmanager* manager, string filepath, int startindex, int blockcount);
   bigfile(chunkmanager* manager, instreamhelp& is);
   ~bigfile();
+
+  bigfile_ptr self() {
+    return bigfile::shared_from_this();
+  }
 
   void writeinfo(outstreamhelp& os);
 
