@@ -1,7 +1,10 @@
 
 
-#ifndef FILECODEC_EXCEPTION
-#define FILECODEC_EXCEPTION
+#ifndef SDK_CORES_UTILS_EXCEPTION_H
+#define SDK_CORES_UTILS_EXCEPTION_H
+
+#include <map>
+#include <string>
 
 namespace sdk {
 namespace cores {
@@ -71,6 +74,51 @@ enum class ChunkError: int
   OFFSETINBLOCK_MAX = 4000,
 
 };
+
+
+enum error_code {
+
+  // filestream
+  FILE_OPEN_ERROR = 3000,
+  FILE_FDSOCK_ERROR,
+  FILE_READWRITE_LEN_ERROR,
+
+  // bigfile 
+  BIGFILE_PTR_RELEASED = 400100,
+  BIGFILE_SIZE_FIXED,
+  BIGFILE_VERSION_NOT_FIT,
+  BIGFILE_NOT_EXIST,
+  // bigfile::blocktarget
+  BLOCKTARGET_NO_IN_BIGFILE = 400200,
+  BLOCKTARGET_MAX_LIMIT,
+
+  // chunk
+
+  // chunkmanager
+  CHUNKMANAGER_ID_NOT_FIX = 400300,
+  CHUNKMANAGER_META_BREAKDOWN,
+
+  // max -1
+  ERR_CODE_GENERAL = -1,
+};
+
+extern std::map<int, std::string> err_messages;
+
+class sdkexception: public std::exception
+{
+public:
+  sdkexception(int code, std::string const &msg = "")
+    :m_msg(msg), m_code(code) {}
+
+  ~sdkexception() throw() {}
+
+  virtual char const* what() const throw();
+  inline int code() const throw() {  return m_code; }
+
+  const std::string m_msg;
+  int m_code;
+};
+
 
 
 } /// namespace utils {

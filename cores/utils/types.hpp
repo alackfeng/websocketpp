@@ -10,6 +10,7 @@
 #include <map>
 #include "cores/utils/Common.h"
 #include "cores/utils/logger.hpp"
+#include "cores/utils/exception.hpp"
 
 
 #endif

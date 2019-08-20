@@ -65,7 +65,7 @@ onupdate* chunk_manager::on_update() {
 bool chunk_manager::is_intact() {
   list<bigfile_ptr>::iterator itr;
   for(itr = bigfiles.begin(); itr != bigfiles.end(); ++itr) {
-    if (!itr->get()->data()) {
+    if (!itr->get()->valid()) {
       return false;
     }
   }
@@ -95,7 +95,7 @@ chunk* chunk_manager::loadchunk(string chunkid, string chunkinfo) {
   list<bigfile_ptr>::iterator itr;
   for(itr = bigfiles.begin(); itr != bigfiles.end(); ++itr) {
     bigfile* bf = itr->get();
-    if (!bf->data()) {
+    if (!bf->valid()) {
       continue;
     }
 

@@ -22,47 +22,49 @@ public:
   class blocktarget
   {
   public:
-    explicit blocktarget(): block_startoffset_infile(-1) {}
-    explicit blocktarget(bigfile_ptr bf, int blockindex): bfile(bf) {
-      int startindex = bfile->startindex;
-      block_startoffset_infile = (int64)(blockindex - startindex) * bfile->get_blocksize();
-    }
-    ~blocktarget() {
-    }
+    blocktarget();
+    blocktarget(bigfile_ptr bf, int blockindex);
+    ~blocktarget();
 
     int writedata(int offsetinblock, const char* data, int offset, int len);
     int readdata(int offsetinblock, char* data, int offset, int len);
 
     inline bigfile_ptr get_bigfile() { return this->bfile; }
 
-    int block_startoffset_infile; // 
+    int64 block_startoffset_infile; // 
     bigfile_ptr bfile;
   };
 
   typedef bigfile::blocktarget blocktarget_type;
+  typedef std::unique_ptr<blocktarget_type> blocktarget_ptr;
 
 public:
-  bigfile() {}
+  bigfile();
   bigfile(chunkmanager* manager, string filepath, int startindex, int blockcount);
   bigfile(chunkmanager* manager, instreamhelp& is);
   ~bigfile();
 
-  bigfile_ptr self() {
-    return bigfile::shared_from_this();
-  }
-
+  /**
+   * bigfile属性写入chunkmanager索引文件
+   **/
   void writeinfo(outstreamhelp& os);
 
   /**
-   * 
+   * 创建bigfile的块元素
    **/
   blocktarget* create_blocktarget(int blockindex);
 
-  inline int start_index() { return startindex; }
-  inline bool data() { return true; }
-  inline int get_blockcount() { return blockcount; }
-  int get_blocksize();
-  int64 get_size();
+  inline int start_index() { return startindex; } // 本bigfile维护的索引位置chunkmanager中
+  inline int get_blockcount() { return blockcount; } // 本bigfile维护的块数量
+  int get_blocksize(); // chunkmanager块大小
+  int64 get_size(); // chunkmanager整个文件大小
+  bool valid(); // 文件有效
+
+protected: 
+  // 获取共享计数，不直接使用this
+  bigfile_ptr self() {
+    return bigfile::shared_from_this();
+  }
 
 private:
   string version;         // 当前版本

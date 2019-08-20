@@ -16,7 +16,7 @@
 #define TAG "android-jni-chunkcc"
 #endif
 
-// #define DEBUG_BD
+#define DEBUG_BD
 extern FILE * fpLog;
 extern void log_init(const char* filename, int level);
 extern void log_close();

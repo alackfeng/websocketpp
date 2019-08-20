@@ -17,6 +17,7 @@ void SyncFile::init(const char* _filename, bool _onlyRead) {
   this->isReadOnly = _onlyRead;
   this->open(filename, isReadOnly);
 }
+
 SyncFile::SyncFile(const char *_filename, bool _onlyRead) : file(nullptr), isReadOnly(_onlyRead) {
   // 文件名拷贝
   memset(this->filename, 0, 256);
@@ -43,6 +44,11 @@ void SyncFile::open(const char* _filename, bool _isReadOnly){
   setFilePos(file, 0, SEEK_END);
   fileSize = getFilePos(file);
   setFilePos(file, 0, SEEK_SET);
+
+  // 文件名拷贝
+  memset(this->filename, 0, 256);
+  memcpy(this->filename, _filename, 256);
+  this->isReadOnly = _isReadOnly;
 }
 
 SyncFile::~SyncFile() {
