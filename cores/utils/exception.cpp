@@ -9,7 +9,9 @@ namespace utils {
 std::map<int, std::string> err_messages = std::map<int, std::string>{
   // base
   {STREAM_NOT_SUPPORT_NEGATIVE_NUMBER, "序列化暂时不支持负数"},
-
+  {STREAM_WRITE_FAILED, "序列化写入失败"},
+  {STREAM_READ_FAILED, "序列化读取失败"},
+  {STREAM_MAX_VALUE, "序列化最大值"},
 
   // 
   {std::make_pair(FILE_OPEN_ERROR, "打开文件失败")},

@@ -86,29 +86,21 @@ public:
   void write_(void *b, int off, int len);
   void flush();
   void writeBoolean(bool v);
-  void writeByte(int v);
+  void writeByte(int v); // 8 bytes
   void writeShort(int v);
-  void writeChar(int v);
+  void writeChar(int v); // 16 bytes
   void writeInt(int v);
   void writeLong(long v);
   void writeFloat(float v);
   void writeDouble(double v);
-  void writeBytes(std::string s);
-  void writeChars(std::string s);
+  void writeBytes(const std::string& s); // string
+  void writeChars(const std::string& s);
   void writeUTF(const std::string& str);
-  int writeUTF(const std::string& str, outstreamhelp* this_);
+  int writeUTF(const std::string& str, outstreamhelp& os);
   inline int size() {  return written; }
 
 private:
-
-  inline void incCount(int value) {
-      int64 temp = written + value;
-      if (temp < 0) {
-          throw 123; // 
-          // temp = Integer.MAX_VALUE;
-      }
-      written = temp;
-  }
+  void incCount(int value);
 
   int64 written = 0; 
   char* bytearr = NULL;

@@ -36,9 +36,26 @@ BOOST_AUTO_TEST_CASE( streamhelp_test ) {
   os.writeLong(startindex + 65536);
 
   // bool
-  os.flush();
+  bool bstart = true;
+  os.writeBoolean(bstart);
+  os.writeBoolean(false);
+  os.writeBoolean(1);
+  os.writeBoolean(0);
 
+  // UTF
+  os.writeUTF("ABC");
+  char* p = new char[10];
+  memset(p, 'A', 5);
+  std::string sStr = "Hello World";
+  sStr += "123";
+  sStr += p;
+  sStr = "CDG";
+  os.writeUTF(sStr);
+
+  os.flush();
   instreamhelp is(filepath);
+
+
   BOOST_CHECK_EQUAL(is.readInt(), -1);
   BOOST_CHECK_EQUAL(is.readInt(), 0);
   BOOST_CHECK_EQUAL(is.readInt(), INT_MAX);
@@ -53,6 +70,14 @@ BOOST_AUTO_TEST_CASE( streamhelp_test ) {
   BOOST_CHECK_EQUAL(is.readLong(), DEFAULT_BIG_FILE_SIZE);
   BOOST_CHECK_EQUAL(is.readLong(), startindex);
   BOOST_CHECK_EQUAL(is.readLong(), startindex + 65536);
+
+  BOOST_CHECK_EQUAL(is.readBoolean(), bstart);
+  BOOST_CHECK_EQUAL(is.readBoolean(), false);
+  BOOST_CHECK_EQUAL(is.readBoolean(), 1);
+  BOOST_CHECK_EQUAL(is.readBoolean(), 0);
+
+  BOOST_CHECK_EQUAL(is.readUTF(), "ABC");
+  BOOST_CHECK_EQUAL(is.readUTF(), sStr);
 
 
   std::cout << sizeof(int) << std::endl;
