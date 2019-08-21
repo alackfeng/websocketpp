@@ -44,4 +44,14 @@ BOOST_AUTO_TEST_CASE( ckmanager_test_create ) {
   auto plugin_ckmanager = sdk::plugins::base::plugins().register_plugin<chunk_manager>(cmpath, sizemb, update);
   plugin_ckmanager->plugin_initialize();
   plugin_ckmanager->plugin_startup();
+
+
+  // 读取
+  const string id = "1566390717"; // plugin_ckmanager->get_id()
+  chunk_manager* rck = new chunk_manager(id, cmpath, update);
+  if(!rck) {
+    BOOST_CHECK( false );
+  }
+  std::cout << "chunk_manager id " << plugin_ckmanager->get_id() << std::endl;
+
 }

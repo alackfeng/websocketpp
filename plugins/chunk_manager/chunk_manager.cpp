@@ -42,24 +42,25 @@ chunk_manager::chunk_manager(string id, string cmpath, int sizemb, onupdate* upd
   }
   // 获取索引文件可用磁盘空间路径
   int bitsize = BITSIZE(totalblock); // bsetio->size();
-  string filepathbit = update->getSpacePath(bitsize);
-  if (filepathbit == "") { // 无法获取有效的磁盘空间，可使用空间如何判断？length
+  bitfilepath = update->getSpacePath(bitsize);
+  if (bitfilepath == "") { // 无法获取有效的磁盘空间，可使用空间如何判断？length
     LOG_F(ERROR, "chunk_manager::chunk_manager - id %s, cmpath %s, not get filepath for bitset.", id.c_str(), cmpath.c_str());
     throw sdkexception(CHUNKMANAGER_NEED_SPACEPATH);
   }
   // 返回的路径是否存在，并且目录？？？？ filepath or cmpath
 
 
-  filepathbit += this->id + ".bs"; // 索引文件,标记block是否被使用了
-  LOG_F(INFO, "chunk_manager::chunk_manager - id %s, cmpath %s, get bitset path %s.", id.c_str(), cmpath.c_str(), filepathbit.c_str());
+  bitfilepath += this->id + ".bs"; // 索引文件,标记block是否被使用了
+  LOG_F(INFO, "chunk_manager::chunk_manager - id %s, cmpath %s, get bitset path %s.", id.c_str(), cmpath.c_str(), bitfilepath.c_str());
   // 创建索引文件缓存，大小为一个bigfile的block数
-  std::unique_ptr<bitsetio> bsetindex(new bitsetio(totalblock));
+  std::unique_ptr<bitsetio> bsetindex(new bitsetio(totalblock, bitfilepath));
   bsetio = std::move(bsetindex);
-  bsetio->init_bitfile(filepathbit);
+  bsetio->init_bitfile();
 
   this->totalblock = 0;
   this->filepath = cmpath + "chunks.cm";
-  // resize(sizemb);
+
+  resize(sizemb * 5);
   writeToFile(this->filepath);
 
   std::cout << "update " << this->update.get() << std::endl;
@@ -70,10 +71,13 @@ chunk_manager::chunk_manager(string id, string filepath, onupdate* update) {
     LOG_F(ERROR, "chunk_manager::chunk_manager - id %s, cmpath %s, need onUpdate callback ", id.c_str(), filepath.c_str());
     throw sdkexception(CHUNKMANAGER_NEED_ONUPDATE);
   }
+
   this->filepath = filepath + "chunks.cm";
   readFromFile(this->filepath);
   if (id != "" && this->id != id) {
-    throw 115; // 数据文件损坏
+    LOG_F(ERROR, "chunk_manager::chunk_manager - id %s, cmpath %s, metadata breakdown id(%s). ", 
+      id.c_str(), filepath.c_str(), this->id.c_str());
+    throw sdkexception(CHUNKMANAGER_META_BREAKDOWN); // 数据文件损坏
   }
 
 }
@@ -265,6 +269,7 @@ void chunk_manager::release_chunk(string chunkid) {
 /** 解锁并释放Chunk占用的空间，被锁定的chunk只存在于磁盘中 */
 void chunk_manager::release_chunk(chunk* chunk) {
 
+  flush_bits(chunk->getstrips(), false);
 }
 
 void chunk_manager::write(outstreamhelp &os) {
@@ -287,6 +292,10 @@ void chunk_manager::write(outstreamhelp &os) {
     itr->get()->writeinfo(os);
   } 
 
+  LOG_F(INFO, "chunk_manager::write - os version %s, id %s, blocksize %d, "
+    "totalblock %d, usedblock %d, blockcheckindex %d, bitfilepath %s, bigfiles %d, lockedchunks %d.",
+    version.c_str(), id.c_str(), blocksize, totalblock, usedblock, blockcheckindex, 
+    bitfilepath.c_str(), bigfiles.size(), lockedchunks.size());
   LOG_F(INFO, "chunk_manager::write - os over.");
 }
 void chunk_manager::read(instreamhelp &is) {
@@ -300,18 +309,26 @@ void chunk_manager::read(instreamhelp &is) {
   if(blockcheckindex < 0) blockcheckindex = is.readInt();
   
   bitfilepath = is.readUTF();
-  bsetio->load_bitfile(bitfilepath);
-
+  LOG_F(INFO, "chunk_manager::read - is. bitfilepath %s, size %d.", bitfilepath.c_str(), totalblock);
+  std::unique_ptr<bitsetio> bsetindex(new bitsetio(totalblock, bitfilepath));
+  bsetio = std::move(bsetindex);
+  bsetio->load_bitfile();
+  
+  LOG_F(INFO, "chunk_manager::read - is version %s, id %s, blocksize %d, "
+    "totalblock %d, usedblock %d, blockcheckindex %d, bitfilepath %s, bigfiles %d, lockedchunks %d.", 
+    version.c_str(), id.c_str(), blocksize, totalblock, usedblock, blockcheckindex,
+    bitfilepath.c_str(), 0, 0);
+  
   int bigfilecount = is.readInt();
   int calcucount = 0;
   while(bigfilecount > 0) {
-    bigfile* bigFile = new bigfile(reinterpret_cast<sdk::cores::chunk::chunkmanager*>(this), is);
+    bigfile_ptr bigFile = std::make_shared<bigfile>(this, is);
     bigfiles.emplace_back(bigFile);
     calcucount += bigFile->get_blockcount();
     --bigfilecount;
   }
   if(calcucount != totalblock) {
-    throw 987; // Block Count Error
+    throw sdkexception(CHUNKMANAGER_BLOCKCOUNT_NOT); // Block Count Error
   }
   LOG_F(INFO, "chunk_manager::read - is.over.");
 }
@@ -320,33 +337,36 @@ void chunk_manager::resize(int sizemb) {
   long newsize = sizemb * 1024L * 1024L;
   int newTotalBlock = (int) (newsize / blocksize);
   if (newTotalBlock < totalblock)
-    throw 123; // new BitDiskException("抱歉，暂时不支持缩减空间！");
+    throw sdkexception(CHUNKMANAGER_CUTDOWN_BLOCKCOUNT); // 抱歉，暂时不支持缩减空间！
+
   int allocBlocks = totalblock;
   string lastBigFilePath = "";
   while (allocBlocks < newTotalBlock) {
     int blockCount = newTotalBlock - allocBlocks;
     if (blockCount > DEFAULT_BIG_FILE_BLOCK_COUNT)
-    blockCount = DEFAULT_BIG_FILE_BLOCK_COUNT;
+      blockCount = DEFAULT_BIG_FILE_BLOCK_COUNT;
     long bigFileSize = (long) blockCount * blocksize;
     if (lastBigFilePath == "")
-    lastBigFilePath = update->getSpacePath(bigFileSize);
-    long freeSpace = 0; // not this, new File(lastBigFilePath).getFreeSpace();
+      lastBigFilePath = update->getSpacePath(bigFileSize);
+    long freeSpace = newsize / 5; // not this, new File(lastBigFilePath).getFreeSpace();
     if (freeSpace < bigFileSize)
       blockCount = (int) (freeSpace / blocksize);
     int bfIndex = bigfiles.size();
     string bigFilePath;
     do {
-    // bigFilePath = lastBigFilePath + id + string.format("_%06d", bfIndex) + ".bf";
-    bigFilePath = lastBigFilePath + id + std::to_string(bfIndex) + ".bf";
-    ++bfIndex;
+      // bigFilePath = lastBigFilePath + id + string.format("_%06d", bfIndex) + ".bf";
+      bigFilePath = lastBigFilePath + id + std::to_string(bfIndex) + ".bf";
+      ++bfIndex;
     } while (false); // new File(bigFilePath).exists());
-    bigfile_ptr bigFile = std::make_shared<bigfile>(reinterpret_cast<sdk::cores::chunk::chunkmanager*>(this), bigFilePath, allocBlocks, blockCount);
+    LOG_F(INFO, "chunk_manager::resize - bigfile path %s, start %d, blockcount %d.", bigFilePath.c_str(), allocBlocks, blockCount);
+    bigfile_ptr bigFile = std::make_shared<bigfile>(this, bigFilePath, allocBlocks, blockCount);
     bigfiles.emplace_back(bigFile);
     allocBlocks += blockCount;
   }
   totalblock = newTotalBlock;
-  // bitFile.setLength(getBitFileSize());
-  update_spaceinfo();
+  bsetio->ext_bitfile(totalblock);
+
+  // update_spaceinfo();
 
 }
 

@@ -86,7 +86,7 @@ protected:
 
   void resize(int sizemb);
   
-private:
+public:
   chunk_manager(string id, string cmpath, int sizemb, onupdate* update);
   chunk_manager(string id, string filepath, onupdate* update);
 
@@ -101,12 +101,11 @@ private:
   
   // 索引文件,标记block是否被使用了
   string bitfilepath;
-  fstream bitfile;
   std::unique_ptr<bitsetio> bsetio;
 
   // bigfile指针需要共享
   list<bigfile_ptr> bigfiles; 
-  int blockcheckindex;
+  int blockcheckindex = -1;
   std::unique_ptr<onupdate> update;
 
   // 

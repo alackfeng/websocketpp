@@ -11,19 +11,15 @@ SyncFile::SyncFile(): file(nullptr) {}
 void SyncFile::init(const char* _filename, bool _onlyRead) {
   
   // 文件名拷贝
-  memset(this->filename, 0, 256);
-  memcpy(this->filename, _filename, 256);
-
+  this->filename = _filename;
   this->isReadOnly = _onlyRead;
-  this->open(filename, isReadOnly);
+  this->open(filename.c_str(), isReadOnly);
 }
 
 SyncFile::SyncFile(const char *_filename, bool _onlyRead) : file(nullptr), isReadOnly(_onlyRead) {
   // 文件名拷贝
-  memset(this->filename, 0, 256);
-  memcpy(this->filename, _filename, 256);
-
-  open(filename, isReadOnly);
+  this->filename = _filename;
+  open(filename.c_str(), isReadOnly);
 }
 
 void SyncFile::open(const char* _filename, bool _isReadOnly){
@@ -46,8 +42,7 @@ void SyncFile::open(const char* _filename, bool _isReadOnly){
   setFilePos(file, 0, SEEK_SET);
 
   // 文件名拷贝
-  memset(this->filename, 0, 256);
-  memcpy(this->filename, _filename, 256);
+  this->filename = _filename;
   this->isReadOnly = _isReadOnly;
 }
 
@@ -58,30 +53,31 @@ SyncFile::~SyncFile() {
 size_t SyncFile::setLength(int64 _fileSize) {
   syncThis() {
     if (!file) {
-      bdlog_error("SyncFile::setLength - ERROR SYNCFILE_FILE_SETLENGHT_FAILED %s\n", filename);
+      bdlog_error("SyncFile::setLength - ERROR SYNCFILE_FILE_SETLENGHT_FAILED %s\n", filename.c_str());
       throw CodeException::SYNCFILE_FILE_SETLENGHT_FAILED;
     }
     if (fileSize == _fileSize)  return fileSize;
     if (isReadOnly) {
-      bdlog_error("SyncFile::setLength - readonly ERROR SYNCFILE_FILE_SETLENGHT_FAILED %s\n", filename);
+      bdlog_error("SyncFile::setLength - readonly ERROR SYNCFILE_FILE_SETLENGHT_FAILED %s\n", filename.c_str());
       throw CodeException::SYNCFILE_FILE_SETLENGHT_FAILED;
     }
 
     fclose(file);
-    file = fopen(filename, "w+");
+    bdlog_info("SyncFile::setLength - filename %s\n", filename.c_str());
+    file = fopen(filename.c_str(), "w+");
     if(!file) {
-      bdlog_error("SyncFile::setLength - w+ ERROR SYNCFILE_FILE_SETLENGHT_FAILED %s\n", filename);
+      bdlog_error("SyncFile::setLength - w+ ERROR SYNCFILE_FILE_SETLENGHT_FAILED %s\n", filename.c_str());
       throw CodeException::SYNCFILE_FILE_SETLENGHT_FAILED;
     }
     seek(_fileSize - 1);
     if (fputc(0, file) == EOF) {
-      bdlog_error("SyncFile::setLength - fputc ERROR SYNCFILE_FILE_SETLENGHT_FAILED %s\n", filename);
+      bdlog_error("SyncFile::setLength - fputc ERROR SYNCFILE_FILE_SETLENGHT_FAILED %s\n", filename.c_str());
       throw CodeException::SYNCFILE_FILE_SETLENGHT_FAILED;
     }
     fclose(file);
 
     int oldSize = fileSize;
-    open(filename, isReadOnly);
+    open(filename.c_str(), isReadOnly);
     return oldSize;
   }
   return 0;
@@ -91,7 +87,7 @@ int64 SyncFile::read(int64 fileOffset, void *buffer, int len) {
   syncThis() {
     int64 readSize = readFile(file, fileOffset, buffer, len);
     if(readSize != len) {
-      bdlog_error("SyncFile::read - ERROR read file %s<%p>. %d - %d:%d.\n", filename, file, fileOffset, readSize, len);
+      bdlog_error("SyncFile::read - ERROR read file %s<%p>. %d - %d:%d.\n", filename.c_str(), file, fileOffset, readSize, len);
       // throw CodeException::FILE_READ_OP_ERROR;
     }
     return readSize;
@@ -103,7 +99,7 @@ int64 SyncFile::write(int64 fileOffset, const void *buffer, int len) {
   syncThis() {
     int64 writeSize = writeFile(file, fileOffset, buffer, len);
     if(writeSize != len) {
-      bdlog_error("SyncFile::write - ERROR write file %s. %d - %d:%d.\n", filename, fileOffset, writeSize, len);
+      bdlog_error("SyncFile::write - ERROR write file %s. %d - %d:%d.\n", filename.c_str(), fileOffset, writeSize, len);
       // throw CodeException::FILE_WRITE_OP_ERROR;
     }
     return writeSize;
@@ -132,7 +128,7 @@ int64 SyncFile::writeL(int64 fileOffset, void* buffer, int len) {
 
 void SyncFile::close() {
 syncThis() {
-  bdlog_info("SyncFile::close %s\n", this->filename);
+  bdlog_info("SyncFile::close %s\n", this->filename.c_str());
   closeFile(file);
   file = nullptr;
 }
@@ -141,8 +137,8 @@ syncThis() {
 void SyncFile::deleteFile() {
 syncThis() {
   if(file) closeFile(file);
-   printf("SyncFile::deleteFile %s\n", this->filename);
-  remove(filename);
+   printf("SyncFile::deleteFile %s\n", this->filename.c_str());
+  remove(filename.c_str());
 }
 }
 
@@ -154,8 +150,8 @@ int SyncFile::truncFile(int64 len) {
     return ::truncFile(_fileno(file), len);
   }
 #else
-  if(filename[0] != 0) {
-    return ::truncFile(filename, len);
+  if(filename != "") {
+    return ::truncFile(filename.c_str(), len);
   }
 #endif
   return 0;

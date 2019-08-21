@@ -12,6 +12,11 @@ std::map<int, std::string> err_messages = std::map<int, std::string>{
   {STREAM_WRITE_FAILED, "序列化写入失败"},
   {STREAM_READ_FAILED, "序列化读取失败"},
   {STREAM_MAX_VALUE, "序列化最大值"},
+  {BITSETIO_PTR_NULL, "bitsetio new failed"},
+  {BITSETIO_BITFILE_OPEN_FAILED, "创建bitfile失败"},
+  {BITSETIO_BITFILE_LENGTH, "bitfile长度不够"},
+  {BITSETIO_BITFILE_READ_FAILED, "bitfile读取失败"},
+  {BITSETIO_BITFILE_FILEPATH_EMPTY, "bitfile文件名为空"},
 
   // 
   {std::make_pair(FILE_OPEN_ERROR, "打开文件失败")},
@@ -35,6 +40,8 @@ std::map<int, std::string> err_messages = std::map<int, std::string>{
   {CHUNKMANAGER_SIZE_MIN_LIMIT, "chunkmanager最少开放MB磁盘空间！"},
   {CHUNKMANAGER_NEED_ONUPDATE, "chunkmanager需求onUpdate回调类"},
   {CHUNKMANAGER_NEED_SPACEPATH, "chunkmanager未获取可用空间"},
+  {CHUNKMANAGER_BLOCKCOUNT_NOT, "chunkmanager总块量不够"},
+  {CHUNKMANAGER_CUTDOWN_BLOCKCOUNT, "chunkmanager暂时不支持缩减空间"},
 };
 
 

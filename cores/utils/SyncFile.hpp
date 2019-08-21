@@ -10,7 +10,7 @@ namespace utils {
 
 class SyncFile : public recursive_mutex {
 protected:
-  char filename[256] = {0};
+  string filename;
   FILE* file;
   void open(const char* _filename, bool _onlyRead);
 public:

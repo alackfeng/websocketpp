@@ -128,9 +128,9 @@ public:
       instreamhelp is(filepath.c_str());
       read(is);
     } catch(std::exception& e) {
-      std::cout << "std::exception " << e.what() << std::endl;
+      std::cout << "readFromFile std::exception " << e.what() << std::endl;
     } catch(...) {
-      std::cout << "std::fatal over." << std::endl;
+      std::cout << "readFromFile std::fatal over." << std::endl;
     }
   }
 
@@ -141,9 +141,9 @@ public:
       write(os);
       os.flush();
     } catch(std::exception& e) {
-      std::cout << "std::exception " << e.what() << std::endl;
+      std::cout << "writeToFile std::exception " << e.what() << std::endl;
     } catch(...) {
-      std::cout << "std::fatal over." << std::endl;
+      std::cout << "writeToFile std::fatal over." << std::endl;
     }
   }
   

@@ -39,7 +39,8 @@ bigfile::bigfile(chunkmanager* manager, instreamhelp& is)
   }
   string managerid = is.readUTF();
   if (manager->get_id() != managerid) {
-    LOG_F(ERROR, "bigfile::bigfile - filepath %s not fix ChunkManager ID", filepath.c_str());
+    LOG_F(ERROR, "bigfile::bigfile - filepath %s not fix ChunkManager ID %s - %s.", 
+      filepath.c_str(), managerid.c_str(), manager->get_id().c_str());
     throw sdkexception(CHUNKMANAGER_ID_NOT_FIX); // ChunkManager 不匹配
   }
   filepath = is.readUTF();
