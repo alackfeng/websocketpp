@@ -112,7 +112,7 @@ void chunk_manager::flush_bits(list<stripinfo_type>& strips, bool value) {
 }
 
 chunk* chunk_manager::loadchunk(string chunkid, string chunkinfo) {
-  chunk* ck = new chunk(reinterpret_cast<sdk::cores::chunk::chunkmanager*>(this));
+  chunk* ck = new chunk(this);
   ck->loadfrom((char*)(chunkinfo.c_str()));
 
   list<stripinfo_type> strips = ck->getstrips();

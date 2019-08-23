@@ -87,12 +87,6 @@ void chunk::read(instreamhelp &is) {
     strips.emplace_back(stripinfo(startindex, blockcount));
     --stripcount;
   }
-  // is >> *this;
-  // int versize;
-  // is >> versize;
-  // string ver; // chunk version
-  // is >> ver;
-  // is.read(reinterpret_cast<char*>(this), sizeof(this));
 
   std::cout << "chunk:" << __FUNCTION__ << " version " << this->chunksize << std::endl;
 }
